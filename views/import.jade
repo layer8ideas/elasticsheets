@@ -1,0 +1,7 @@
+extends layout
+block content
+	body
+	h1= title
+	form(action="/importer/json/sheets/rs", method="post", enctype="multipart/form-data")
+		input(type="file", name="ufile")
+		input(type="submit", name="Upload")

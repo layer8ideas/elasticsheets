@@ -3,6 +3,7 @@ Organize lots of stuff.
 
 Check out the Demo @ http://www.elasticsheets.org
 
+Download Here: http://www.elasticsheets.org/download/
 
 ## Requirements
 ElasticSearch

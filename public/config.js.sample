@@ -2,7 +2,7 @@
 var prod_levels = ["Dev","Test","UAT","Staging","Prod"];
 
 var ws_types = ["HTTP(S)","DNS","Database VIP","FTP","SMTP"];
-var rs_types = ["Linux","Firewall","F5","Database","Switch","Router"];
+var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"];
 
 /*
  *  Once a column has been defined, it cannot be removed or have it's type changed unless you intend to "clean"

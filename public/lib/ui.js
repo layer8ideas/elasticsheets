@@ -14,11 +14,10 @@ webix.ready(function(){
 		            	 id: "thetabs",
 		            	 view: "tabview",
 		            	 cells: sheetsArray,
-		            	 isolate:true,
 		            	 tabbar:{
 		            		 on:{
 		            			 onChange:function(id,id2,id3,id4){
-		            				 console.log(this.getValue());
+		            				// console.log(this.getValue());
 		            			 }
 		            		 }
 		            	 }
@@ -32,9 +31,6 @@ webix.ready(function(){
 
 	});
 
-	$$('thetabs').attachEvent("onItemClick", function(id, e){
-		webix.message("Click "+id);
-	});
 
 	for (var i=0;i<config.sheets.length;i++){
 		configureSheet(i);	

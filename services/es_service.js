@@ -24,7 +24,7 @@ for (i=0;i<config.sheets.length;i++){
 		var column = config.sheets[i].columns[j];
 		mappings[id].properties[column.id] = column.mapping;
 	}
-	
+
 }
 
 
@@ -94,9 +94,9 @@ function init() {
 }
 
 function doConfigTest(){
-	
+
 	for (i=0;i<config.sheets.length;i++){
-		
+
 		var sheet = config.sheets[i].id;
 
 		for (j=0;j<config.sheets[i].columns.length;j++){
@@ -110,7 +110,7 @@ function doConfigTest(){
 		}
 
 	}
-	
+
 	return true;
 
 }
@@ -161,46 +161,46 @@ function search(index_id, type_id, request_query) {
 	search.sort = { };
 
 	var position = 0;
-	
+
 	if (request_query.sort){
 		for (var key in request_query.sort) {
 			var config_column = config.columns_by_id[type_id][key];
-            if (!config_column.id) continue;
-            
-            var property = key;
-			
+			if (!config_column.id) continue;
+
+			var property = key;
+
 			if (config_column.lookup_type){
 				property = key + ".label";
 			}
-            
-            search.sort[property + ".raw"] = { "order": request_query.sort[key] }
-            
+
+			search.sort[property + ".raw"] = { "order": request_query.sort[key] }
+
 		}
 	}
-	
+
 	search.sort["label.raw"] = { "order": "asc" };
 
 	if (request_query.filter) {
-		
+
 		search.query = {};
 		search.query.bool = {};
 		search.query.bool.must = [];
 
 		for (var key in request_query.filter) {
-			
+
 			var config_column = config.columns_by_id[type_id][key];
-            if (!config_column.id) continue;
-            
+			if (!config_column.id) continue;
+
 			if (request_query.filter[key] && request_query.filter[key] !== "") {
 
 				var property = key;
-				
+
 				if (config_column.lookup_type){
 					property = key + ".label";
 				}
 
 				if (config.columns_by_id[type_id][key].drop_down){
-					
+
 					var phrase = {};
 					phrase['term'] = {};
 					phrase['term'][property + ".raw"] = {}
@@ -239,6 +239,7 @@ function search(index_id, type_id, request_query) {
 	client.search({
 		type: type_id,
 		index: index_id,
+		version: true,
 		body: search
 	}).then(function (data) {
 
@@ -251,6 +252,7 @@ function search(index_id, type_id, request_query) {
 			for (var i = 0; i < resultsArray.length; i++) {
 				results[i] = resultsArray[i]._source ;
 				results[i].id = resultsArray[i]._id;
+				results[i].version = resultsArray[i]._version;
 			}
 
 			response.total_count = data.hits.total;
@@ -283,6 +285,7 @@ function index(index_id, type_id, id, document) {
 
 	var type="update";
 
+
 	if (!id){
 		type="insert";
 		id = generateUUID();	
@@ -297,28 +300,39 @@ function index(index_id, type_id, id, document) {
 				document[field] = JSON.parse(document[field]);
 			}
 		} catch (e){
-			
+
 		}
-		
+
 	}
 
 	console.log("Indexing " + JSON.stringify(document), index_id, type_id, id);
 
 	client.index({
-		
+
 		index: index_id,
 		type: type_id,
 		id: id,
+		version: document.version,
 		body: document
 
 	}).then(function (data) {
-		var response = {
 
-			status: "success",
-			newid: data._id,
-			id: document.sid
+		var response;
 
-		};
+		if (data.created) {
+			
+			response = {
+					status: "success",
+					newid: data._id,
+					id: document.sid
+			};
+
+		} else {
+			
+			response = document;
+			response.version = data._version;
+
+		}
 
 		deferred.resolve(response);
 

@@ -12,7 +12,7 @@ var rs_types = ["Linux","Firewall","F5","Database","Switch","Router"];
 
 	exports.elasticsearch = {
 			host: 'localhost:9200',
-		//	log: 'trace'
+			log: 'trace'
 	};
 
 	exports.index_id = "elasticsheets";
@@ -21,7 +21,7 @@ var rs_types = ["Linux","Firewall","F5","Database","Switch","Router"];
 
 	exports.sheets = [
 	                  { 
-	                	
+
 	                	  id: "rs",
 	                	  header: "Servers", 
 	                	  icon: "fa-building",
@@ -32,20 +32,15 @@ var rs_types = ["Linux","Firewall","F5","Database","Switch","Router"];
 	                	            textColumn("description", "Description"),
 	                	            lookupColumn("datacentre", "Datacentre", "datacentre", { drop_down:true } ),
 	                	            lookupColumn("hosts", "Hosts", "ws", {lookup_multi:true, width:300} ),
-	                	     
+
 	                	            ],
-	                	   /*
-	                	    * this can be useful if you are willing to set up protocol associations. 
-	                	   contextmenu: ['SSH', 'RDP'],
-	                  	   contextmenuclicked: function(id, obj){
-	                  		   if (id === 'SSH'){
-	                  			   window.location.assign("ssh://" + obj.NETWORK_ADDRESS); 
-	                  		   }  else if (id === 'RDP'){
-	                  			   window.location.assign("rdp://" + obj.NETWORK_ADDRESS);
-	                  			   
-	                  		   }
-	                  	   }
-	                  	   */
+
+
+	                	            contextmenu: ['Dump'],
+	                	            contextmenuclicked: function(id, obj){
+	                	            	console.log(obj);
+	                	            }
+
 	                  },
 	                  { 
 	                	  id: "ws",
@@ -75,7 +70,11 @@ var rs_types = ["Linux","Firewall","F5","Database","Switch","Router"];
 	                	            labelColumn("label", "Label", {icon: "fa-home"}),
 	                	            lookupColumn("datacentre", "Has", null, {lookup_multi:true, hidden:true } ),
 	                	            textColumn("desc", "Description", {width:1000}),
-	                	            ]
+	                	            ],
+	                	            contextmenu: ['Dump'],
+	                	            contextmenuclicked: function(id, obj){
+	                	            	console.log(obj);
+	                	            }
 
 	                  },
 	                  { 
@@ -187,10 +186,10 @@ var rs_types = ["Linux","Firewall","F5","Database","Switch","Router"];
 			var display = "";
 			if (obj[id] && obj[id].length > 0) {
 				if (type && exports.sheets_by_id[type].icon){
-				 display += "<span style='color:#268fd5;' class='webix_icon "+exports.sheets_by_id[type].icon+"'></span>"; 
+					display += "<span style='color:#268fd5;' class='webix_icon "+exports.sheets_by_id[type].icon+"'></span>"; 
 				}
 				for (var i=0; i<obj[id].length; i++) {
-					
+
 					display += "<b>" + obj[id][i].label + "</b>"; 
 					if (obj[id].length > i+1) display += ", ";
 

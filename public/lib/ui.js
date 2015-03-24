@@ -17,6 +17,7 @@ webix.ready(function(){
 		            	 tabbar:{
 		            		 on:{
 		            			 onChange:function(id,id2,id3,id4){
+		            				// might be nice to reload the tab's data
 		            				// console.log(this.getValue());
 		            			 }
 		            		 }
@@ -131,9 +132,13 @@ function createSheet(i){
 			    	  id:"sheet_" + i,
 			    	  resizeColumn:true,
 			    	  view:"datatable",
-			    	  save:  "rest->/index/" + config.index_id + "/" + config.sheets[i].id,
+			    	  save:  {
+			    		  url: "rest->/index/" + config.index_id + "/" + config.sheets[i].id,
+			    		  updateFromResponse:true
+			    	  },	
 			    	  url: "/search/" + config.index_id + "/" + config.sheets[i].id,
-			    	  columns:theseColumns,						
+			    	  columns:theseColumns,			
+			    	  updateFromResponse:true, 
 			    	  editable:true,
 			    	  editaction:"custom",
 			    	  navigation:true,
@@ -196,7 +201,11 @@ function configureSheet(i){
 		doEdit(this, e);
 	});
 
-
+	webix.dp($$("sheet_" + i)).attachEvent('onAfterSaveError', function(id, status, obj, obj2){
+		if (obj2.text.indexOf("VersionConflictEngineException") > -1) 
+			webix.alert("You are editing an old version of this record.  Please refresh and try again.");
+		
+	});
 
 
 }

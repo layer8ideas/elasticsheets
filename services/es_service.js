@@ -302,7 +302,10 @@ function index(index_id, type_id, id, document) {
 		
 	}
 
+	console.log("Indexing " + JSON.stringify(document), index_id, type_id, id);
+
 	client.index({
+		
 		index: index_id,
 		type: type_id,
 		id: id,
@@ -311,9 +314,9 @@ function index(index_id, type_id, id, document) {
 	}).then(function (data) {
 		var response = {
 
-				status: "success",
-				newid: data._id,
-				id: document.sid
+			status: "success",
+			newid: data._id,
+			id: document.sid
 
 		};
 

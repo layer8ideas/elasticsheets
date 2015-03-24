@@ -6,7 +6,6 @@
 var express = require('express');
 var routes = require('./routes/index');
 var rest = require('./routes/rest');
-var graph = require('./routes/graph');
 var http = require('http');
 var path = require('path');
 var Q = require('q');

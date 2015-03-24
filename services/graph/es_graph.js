@@ -19,6 +19,8 @@ function del(index_id, type_id, document_id, document){
 
 function index(index_id, type_id, document_id, document) {
 		
+	//return Q(true);
+	
 	if (!document_id) return Q(false);
 	
 	var checks = [];
@@ -50,7 +52,7 @@ function index(index_id, type_id, document_id, document) {
 					search.query.terms._id.push(document[field][i].id);
 				}
 				
-				checks.push(checkAdjacency(
+				checks.push(checkKnownAdjacency(
 					index_id,
 					config_column,
 					document,
@@ -58,11 +60,11 @@ function index(index_id, type_id, document_id, document) {
 				));
 			}
 
-			var search = { query: { "match" : {} } };			
-			search.query.match[config_column.opposingColumnId() + ".id"] = document_id;
+			var search = { query: { "term" : {} } };			
+			search.query.term[config_column.opposingColumnId() + ".id"] = document_id;
 			search.size = 10000;
 			
-			checks.push(checkBrokenAdjacency(
+			checks.push(checkUnknownAdjacency(
 				index_id,
 				config_column,
 				document,
@@ -78,7 +80,7 @@ function index(index_id, type_id, document_id, document) {
 
 }
 
-function checkBrokenAdjacency(index_id, config_column, document, search){
+function checkUnknownAdjacency(index_id, config_column, document, search){
 		
 	var deferred = Q.defer();
 
@@ -93,7 +95,8 @@ function checkBrokenAdjacency(index_id, config_column, document, search){
 	
 	client.search({
 		index: index_id,
-		scroll: '30s',
+		type: [Object.keys(config.sheets_by_id)],
+		//scroll: '30s',
 		body: search
 	}).then(function (data) {
 
@@ -144,7 +147,7 @@ function checkBrokenAdjacency(index_id, config_column, document, search){
 	
 }
 
-function checkAdjacency(index_id, config_column, document, search){
+function checkKnownAdjacency(index_id, config_column, document, search){
 
 	var deferred = Q.defer();
 

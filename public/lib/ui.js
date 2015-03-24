@@ -14,10 +14,11 @@ webix.ready(function(){
 		            	 id: "thetabs",
 		            	 view: "tabview",
 		            	 cells: sheetsArray,
+		            	 isolate:true,
 		            	 tabbar:{
 		            		 on:{
-		            			 onChange:function(){
-		            				 console.log(this.getValue()	);
+		            			 onChange:function(id,id2,id3,id4){
+		            				 console.log(this.getValue());
 		            			 }
 		            		 }
 		            	 }

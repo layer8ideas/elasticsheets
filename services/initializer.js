@@ -1,5 +1,5 @@
 
-var config = require('../public/lib/config.js');
+var config = require('../public/config.js');
 var esService = require('./es_service');
 var configTest = require('./config_test');
 var Q = require('q');

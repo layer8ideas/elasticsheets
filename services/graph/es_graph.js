@@ -9,7 +9,7 @@ var Q = require('q');
 
 var client = new elasticsearch.Client({
 	host: config.elasticsearch.host,
-	//log: 'trace'
+	log: config.elasticsearch.log,
 });
 
 function del(index_id, type_id, document_id, document){

@@ -7,7 +7,6 @@ var express = require('express');
 var routes = require('./routes/index');
 var rest = require('./routes/rest');
 var graph = require('./routes/graph');
-var importer = require('./routes/importer');
 var http = require('http');
 var path = require('path');
 var Q = require('q');
@@ -27,8 +26,6 @@ app.use(express.methodOverride());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(multer({ dest: './uploads/' 	}));
-
 if ('development' == app.get('env')) {
 	app.use(express.errorHandler());
 }
@@ -41,10 +38,6 @@ app.del('/index/:index_id/:type_id/:id', rest.del);
 
 app.get('/search/:index_id/:type_id', rest.search);
 app.get('/options/:index_id/:type_id', rest.options);
-
-app.get('/import/', importer.import);
-app.post('/importer/json/:index_id/:type_id', importer.json);
-
 
 
 Q(initializer.init()).then(function (data) {

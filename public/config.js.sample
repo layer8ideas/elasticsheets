@@ -1,13 +1,12 @@
 
-var prod_levels = ["Dev","Prod","Staging","Test", "UAT1","UAT2","UAT3"];
+var prod_levels = ["Dev","Test","UAT","Staging","Prod"];
 
-var ws_types = ["HTTP(S)","Internal VIP","DNS","Database Load Balancing","SSH / SFTP","SMTP"];
-var rs_types = ["Linux DNS Server","Firewall","Cisco ASA","Network Device","F5","IDS Server","WhatsUp","ETL Server","MongoDB Server","Windows Web Server","Nagios Server","Sharepoint Server","Switch","Router","Windows Server","Log Server","Linux Server","MySQL Server","Dell SonicWALL","AAA Server","Exchange Server","Barracuda","Domain Controller","Cisco ACS","Abstract ETL Server","Load Balancer","MSSQL Server","Kiosk VM Linux Server","Dell Secure Remote Access","Tomcat/Apache Server","Cisco CSS","Amazon Linux Server","Access Point","Barracuda WAF"];
+var ws_types = ["HTTP(S)","DNS","Database VIP","FTP","SMTP"];
+var rs_types = ["Linux","Firewall","F5","Database","Switch","Router"];
 
 /*
  *  Once a column has been defined, it cannot be removed or have it's type changed unless you intend to "clean"
  */
-
 
 (function(exports){
 
@@ -16,7 +15,7 @@ var rs_types = ["Linux DNS Server","Firewall","Cisco ASA","Network Device","F5",
 //			log: 'trace'
 	};
 
-	exports.index_id = "sheets";
+	exports.index_id = "elasticsheets";
 
 	exports.max_filter_options = 25;
 
@@ -28,29 +27,25 @@ var rs_types = ["Linux DNS Server","Firewall","Cisco ASA","Network Device","F5",
 	                	  icon: "fa-building",
 	                	  columns: [
 	                	            labelColumn("label", "Label", {icon: "fa-building"}),
-	                	            optionsColumn("IS_RS_TYPE", "Type", { options:rs_types } ),
-	                	            textColumn("NETWORK_ADDRESS", "Hostname", {width:250}),
-	                	            textColumn("DESCRIPTION", "Description"),
-	                	            textColumn("NOTES_TEXT", "Notes"),
-	                	            lookupColumn("IS_IN_ENVIRONMENT_out", "In Environment", "environment", { drop_down:true , lookup_id:"IS_IN_ENVIRONMENT_in"}),
-	                	            lookupColumn("IS_IN_DATACENTRE_out", "Datacentre", "datacentre", { drop_down:true, lookup_id:"IS_IN_DATACENTRE_in" } ),
-	                	            lookupColumn("IS_HOSTED_ON_REAL_SERVER_in", "Hosts", "ws", {lookup_multi:true, width:300, lookup_id:"IS_HOSTED_ON_REAL_SERVER_out"} ),
-	                	            lookupColumn("IS_MONITORED_BY_NAGIOS_SERVER_out", "Nagios Server", "rs", { lookup_id:"IS_MONITORED_BY_NAGIOS_SERVER_in" } ),
-	                	            lookupColumn("IS_MONITORED_BY_NAGIOS_SERVER_in", "Monitors", null, {lookup_multi:true, lookup_id:"IS_MONITORED_BY_NAGIOS_SERVER_out", hidden:true } ),
-
+	                	            optionsColumn("type", "Type", { options:rs_types } ),
+	                	            textColumn("hostname", "Hostname", {width:250}),
+	                	            textColumn("description", "Description"),
+	                	            lookupColumn("datacentre", "Datacentre", "datacentre", { drop_down:true } ),
+	                	            lookupColumn("hosts", "Hosts", "ws", {lookup_multi:true, width:300} ),
+	                	     
 	                	            ],
-	                	   contextmenu: ['Log', 'SSH', 'RDP'],
+	                	   /*
+	                	    * this can be useful if you are willing to set up protocol associations. 
+	                	   contextmenu: ['SSH', 'RDP'],
 	                  	   contextmenuclicked: function(id, obj){
-	                  		   if (id === 'Log') { 
-	                  			   console.log(id, obj) 
-	                  			   webix.message("Information about '" +obj.label+ "' has been logged to console")
-	                  		   } else if (id === 'SSH'){
-	                  			   window.location.assign("ssh://" + obj.NETWORK_ADDRESS)
+	                  		   if (id === 'SSH'){
+	                  			   window.location.assign("ssh://" + obj.NETWORK_ADDRESS); 
 	                  		   }  else if (id === 'RDP'){
-	                  			   window.location.assign("rdp://" + obj.NETWORK_ADDRESS)
+	                  			   window.location.assign("rdp://" + obj.NETWORK_ADDRESS);
 	                  			   
 	                  		   }
 	                  	   }
+	                  	   */
 	                  },
 	                  { 
 	                	  id: "ws",
@@ -59,21 +54,17 @@ var rs_types = ["Linux DNS Server","Firewall","Cisco ASA","Network Device","F5",
 	                	  columns: [  
 
 	                	            labelColumn("label", "Label", {icon: "fa-sitemap"}),
-	                	            optionsColumn("IS_WS_TYPE", "Type", { options:ws_types, drop_down:true, } ),
-	                	            textColumn("_GLB_DNS_NAME", "External Hostname", {width:250}),
-	                	            textColumn("NETWORK_ADDRESS", "Internal Hostname", {width:250}),
-	                	            textColumn("PUBLIC_IP", "Public IP"),
-	                	            lookupColumn("IS_IN_DATACENTRE_out", "Datacentre", "datacentre", { drop_down:true, lookup_id:"IS_IN_DATACENTRE_in" } ),
-	                	            lookupColumn("IS_PART_OF_PRODUCT_out", "Product", "product", {  lookup_id:"IS_PART_OF_PRODUCT_in"} ),
-	                	            optionsColumn("HAS_PROD_LEVEL", "Prod Level", { options:prod_levels, drop_down:true, } ),
-	                	            lookupColumn("IS_IN_ENVIRONMENT_out", "In Environment", "environment", {drop_down:true, lookup_id:"IS_IN_ENVIRONMENT_in"}),
-	                	            lookupColumn("IS_HOSTED_ON_REAL_SERVER_out", "Hosted On", "rs", {lookup_multi:true, width:300, lookup_id:"IS_HOSTED_ON_REAL_SERVER_in"} ),
-	                	            lookupColumn("DEPEND_ON_OTHER_SERVICE_out", "Depends On Service", "ws", {lookup_multi:true,width:300, lookup_id:"DEPEND_ON_OTHER_SERVICE_in"} ),
-	                	            lookupColumn("DEPEND_ON_OTHER_SERVICE_in", "Service Depends On Me", "ws", {lookup_multi:true,width:300, lookup_id:"DEPEND_ON_OTHER_SERVICE_out"} ),
-	                	            textColumn("notes", "Notes"),
+	                	            optionsColumn("type", "Type", { options:ws_types, drop_down:true, } ),
 	                	            { id:"url", header: "URL", editor:"text", template:function(obj){ if(obj.url) return "<a  href='" + obj.url + "'>" + obj.url + "</a>"; else return ""; }, width:150 },
-
-	                	            lookupColumn("IS_MONITORED_BY_NAGIOS_SERVER_out", "Nagios Server", "rs", { lookup_id:"IS_MONITORED_BY_NAGIOS_SERVER_in" } ),
+	                	            textColumn("ihostname", "Internal Hostname", {width:250}),
+	                	            textColumn("ehostname", "External Hostname"),
+	                	            lookupColumn("product", "Product", "product"),
+	                	            optionsColumn("prodlevel", "Prod Level", { options:prod_levels, drop_down:true, } ),
+	                	            lookupColumn("hosts", "Hosted On", "rs", {lookup_multi:true, width:300} ),
+	                	            lookupColumn("depends_on_other", "Depends On Service", "ws", {lookup_multi:true,width:300, lookup_id:"other_depends_on_me"} ),
+	                	            lookupColumn("other_depends_on_me", "Service Depends On Me", "ws", {lookup_multi:true,width:300, lookup_id:"depends_on_other"} ),
+	                	            textColumn("desc", "Description"),
+	                	            textColumn("notes", "Notes")
 	                	            ]
 
 	                  },
@@ -83,19 +74,8 @@ var rs_types = ["Linux DNS Server","Firewall","Cisco ASA","Network Device","F5",
 	                	  icon: "fa-home",
 	                	  columns: [  
 	                	            labelColumn("label", "Label", {icon: "fa-home"}),
-	                	            lookupColumn("IS_IN_DATACENTRE_in", "Has", null, {lookup_multi:true, lookup_id:"IS_IN_DATACENTRE_out", hidden:true } ),
-	                	            textColumn("DESCRIPTION", "Description", {width:1000}),
-	                	            ]
-
-	                  },
-	                  { 
-	                	  id: "environment",
-	                	  header: "Environments", 
-	                	  icon: "fa-cloud",
-	                	  columns: [  
-	                	            labelColumn("label", "Label", {icon: "fa-cloud"}),
-	                	            lookupColumn("IS_IN_ENVIRONMENT_in",  "Has", null, {lookup_multi:true, lookup_id:"IS_IN_ENVIRONMENT_out", hidden:true } ),
-	                	            textColumn("DESCRIPTION", "Description", {width:1000}),
+	                	            lookupColumn("datacentre", "Has", null, {lookup_multi:true, hidden:true } ),
+	                	            textColumn("desc", "Description", {width:1000}),
 	                	            ]
 
 	                  },
@@ -105,8 +85,8 @@ var rs_types = ["Linux DNS Server","Firewall","Cisco ASA","Network Device","F5",
 	                	  icon: "fa-pie-chart",
 	                	  columns: [  
 	                	            labelColumn("label", "Label", {icon: "fa-pie-chart"}),
-	                	            lookupColumn("IS_PART_OF_PRODUCT_in",  "Services", null, {lookup_multi:true, width:500, lookup_id:"IS_PART_OF_PRODUCT_out" } ),
-	                	            textColumn("DESCRIPTION", "Description", {width:500}),
+	                	            lookupColumn("product",  "Services", null, {lookup_multi:true, width:500 } ),
+	                	            textColumn("desc", "Description", {width:500}),
 	                	            ]
 
 	                  },
@@ -191,11 +171,11 @@ var rs_types = ["Linux DNS Server","Firewall","Cisco ASA","Network Device","F5",
 
 		var options = {id: id, lookup:true, lookup_type:type, width:200, mapping: mapping, parseJSONStringValue:true, sort:"server"};
 
-		if (overrides.drop_down == true){
+		if (overrides && overrides.drop_down == true){
 			options.header = [label, {content:"serverSelectFilter"}];
 			options.options = "/options/" + exports.index_id + "/" + options.lookup_type;
 		} else {
-			overrides.drop_down = false;
+			options.drop_down = false;
 			options.header = [label, {content:"serverFilter"}];
 		}
 

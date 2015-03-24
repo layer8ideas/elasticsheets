@@ -8,7 +8,7 @@ var Q = require('q');
 
 var client = new elasticsearch.Client({
 	host: config.elasticsearch.host,
-	//log: 'trace'
+	log: config.elasticsearch.log,
 });
 
 var mappings = {};

@@ -93,27 +93,6 @@ function init() {
 
 }
 
-function doConfigTest(){
-
-	for (i=0;i<config.sheets.length;i++){
-
-		var sheet = config.sheets[i].id;
-
-		for (j=0;j<config.sheets[i].columns.length;j++){
-			var column = config.sheets[i].columns[j];
-			if (column.lookup && !config.columns_by_id[column.lookup_type]) {
-				return "Sheet '" +  sheet + "', column '" + column.id + "' is configured as Lookup, so you must configure the matching specified sheet '" + column.lookup_type + "'";
-			}
-			if (column.lookup && !config.columns_by_id[column.lookup_type][column.opposingColumnId()]) {
-				return "Sheet '" +  sheet + "', column '" + column.id + "' is configured as Lookup, so you must configure the matching column '"+column.opposingColumnId()+"' in sheet '" + column.lookup_type + "'";
-			}
-		}
-
-	}
-
-	return true;
-
-}
 
 function createIndex() {
 

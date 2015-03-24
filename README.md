@@ -9,10 +9,6 @@ Download Install Package: http://www.elasticsheets.org/download/
 ElasticSearch
 https://www.elastic.co/
 
-Webix
-http://webix.com/
-
-
 ## Configuration
 
 ```javascript
@@ -38,7 +34,19 @@ exports.sheets = [ {
 
   } ];
 ```
-## Installation
+
+## Installation (64 Bit Linux)
+1.  Install & Start ElasticSearch (Apache 2.0)
+https://www.elastic.co/downloads/elasticsearch
+2. Download the Installation Package  
+http://www.elasticsheets.org/download/
+3.  Configure public/config.js (copy config.js.sample)
+4.  Start the Server
+# bin/elasticsheets
+8. Browse
+http://your-server.com:3000/
+
+## Manual Installation (All Other)
 1.  Install & Start ElasticSearch (Apache 2.0)
 https://www.elastic.co/downloads/elasticsearch
 2. Download NodeJS

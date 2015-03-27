@@ -39,9 +39,9 @@ var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"]
 	                	   contextmenu: ['SSH', 'RDP'],
 	                  	   contextmenuclicked: function(id, obj){
 	                  		   if (id === 'SSH'){
-	                  			   window.location.assign("ssh://" + obj.NETWORK_ADDRESS); 
+	                  			   window.location.assign("ssh://" + obj.hostname); 
 	                  		   }  else if (id === 'RDP'){
-	                  			   window.location.assign("rdp://" + obj.NETWORK_ADDRESS);
+	                  			   window.location.assign("rdp://" + obj.hostname);
 	                  			   
 	                  		   }
 	                  	   }

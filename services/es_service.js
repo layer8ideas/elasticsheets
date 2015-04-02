@@ -157,7 +157,10 @@ function search(index_id, type_id, request_query) {
 		}
 	}
 
-	search.sort["label.raw"] = { "order": "asc" };
+	if (!search.sort.hasOwnProperty("label.raw")){
+         search.sort["label.raw"] = { "order": "asc" };
+        }
+
 
 	if (request_query.filter) {
 

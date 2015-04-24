@@ -51,6 +51,63 @@ function createSheet(i){
 	var header = config.sheets[i].header;
 	if (config.sheets[i].icon) header = "<span class='webix_icon "+config.sheets[i].icon+"'></span>" + config.sheets[i].header;
 
+/*
+webix.proxy.es = {
+    $proxy:true,
+    load:function(url, call, arguments){
+	var ajax = webix.AtomDataLoader.load.apply(this, arguments);
+
+		//prepare data feed for dyn. loading
+		if (!this.data.url)
+			this.data.url = url;
+
+		return ajax;
+    },
+    save:function(view, update, dp, callback){
+        //your saving pattern
+        webix.ajax().post(url, data, callback);
+    }
+};
+*/
+
+	var datatable_config = {
+		  datafetch:50,
+		  //datathrottle:500,
+		  loadahead:50,
+		  id:"sheet_" + i,
+		  resizeColumn:true,
+		  view:"datatable",
+		  save:  {
+			  url: "rest->/index/" + config.index_id + "/" + config.sheets[i].id,
+			  updateFromResponse:true
+		  },	
+		  url: "/search/" + config.index_id + "/" + config.sheets[i].id,
+
+		  columns:theseColumns,			
+		  updateFromResponse:true, 
+		  editable:true,
+		  editaction:"custom",
+		  navigation:true,
+		  leftSplit:2,
+		  select:"cell",
+		  multiselect:true,
+		  onContext:{},
+		  on:{
+			onBeforeLoad:function(){
+			    //this.showOverlay("Loading...");
+			},
+			onAfterLoad:function(){
+			    //this.hideOverlay();
+			}
+		    },
+	      };
+
+	if (config.sheets[i].datatable_config){
+        	for (var key in config.sheets[i].datatable_config) {
+		   datatable_config[key] = config.sheets[i].datatable_config[key];	
+		}
+	}
+
 	return {
 
 		id: "sheet_tab_" + i,
@@ -69,42 +126,15 @@ function createSheet(i){
 
 			    	        }},
 			    	        { view: "button", type: "iconButton", icon: "remove", label: "Delete", width: 100, click: function(){
-
-			    	        	var table = $$("sheet_" + i);
-			    	        	var selection = table.getSelectedId(true);
-			    	        	var cellsByRow = {};
-
-			    	        	// First sort them by row so that we can do atomic updates
-			    	        	for (var j=0; j<selection.length; j++) { 
-			    	        		if (!cellsByRow[selection[j].row]) {
-			    	        			cellsByRow[selection[j].row] = [];
-			    	        		}
-			    	        		cellsByRow[selection[j].row].push(selection[j]);
-			    	        	}
-
-			    	        	for (var rowId in cellsByRow){
-
-			    	        		var rowUpdateData = {};
-			    	        		var cells = cellsByRow[rowId];
-			    	        		var row = cells[0].row;
-			    	        		for (var j=0; j<cells.length; j++) { 
-
-			    	        			if (cells[j].column == "rowsel"){
-			    	        				table.remove(cells[j].row);
-			    	        				rowUpdateData = {};
-			    	        				continue;
-			    	        			} else if (table.exists(cells[j].row) && config.columns_by_id[config.sheets[i].id][cells[j].column].lookup_type) {
-			    	        				rowUpdateData[cells[j].column] = [];
-			    	        			} else if (table.exists(cells[j].row)) {
-			    	        				rowUpdateData[cells[j].column] = "";
-			    	        			}			    	        			
-
-			    	        		}
-
-			    	        		if (Object.keys(rowUpdateData).length > 0) {
-			    	        			table.updateItem(row, rowUpdateData);
-			    	        		}
-			    	        	}
+					
+						webix.confirm({
+						    ok:"Yes", 
+						    cancel:"No",
+						    text:"Are you sure you want to delete the selected rows or fields?",
+						    callback:function(confirmed){ //setting callback
+							if (confirmed) doDelete(i);
+						   }
+						});	
 
 			    	        }},
 			    	        { view: "button", type: "iconButton", icon: "refresh", label: "Refresh", width: 100, click: function(){
@@ -122,36 +152,53 @@ function createSheet(i){
 
 			    	        }},
 
-			    	        {}
+			    	        {},
 			    	        ]
-			      },
-			      {
-			    	  datafetch:200,
-			    	  //datathrottle:500,
-			    	  loadahead:200,
-			    	  id:"sheet_" + i,
-			    	  resizeColumn:true,
-			    	  view:"datatable",
-			    	  save:  {
-			    		  url: "rest->/index/" + config.index_id + "/" + config.sheets[i].id,
-			    		  updateFromResponse:true
-			    	  },	
-			    	  url: "/search/" + config.index_id + "/" + config.sheets[i].id,
-			    	  columns:theseColumns,			
-			    	  updateFromResponse:true, 
-			    	  editable:true,
-			    	  editaction:"custom",
-			    	  navigation:true,
-			    	  leftSplit:2,
-			    	  select:"cell",
-			    	  multiselect:true,
-			    	  onContext:{}
-			      }
+			      }, datatable_config
 			      ]
 
 		}
 	};
 
+}
+
+function doDelete(i){
+
+	var table = $$("sheet_" + i);
+	var selection = table.getSelectedId(true);
+	var cellsByRow = {};
+
+	// First sort them by row so that we can do atomic updates
+	for (var j=0; j<selection.length; j++) { 
+		if (!cellsByRow[selection[j].row]) {
+			cellsByRow[selection[j].row] = [];
+		}
+		cellsByRow[selection[j].row].push(selection[j]);
+	}
+
+	for (var rowId in cellsByRow){
+
+		var rowUpdateData = {};
+		var cells = cellsByRow[rowId];
+		var row = cells[0].row;
+		for (var j=0; j<cells.length; j++) { 
+
+			if (cells[j].column == "rowsel"){
+				table.remove(cells[j].row);
+				rowUpdateData = {};
+				continue;
+			} else if (table.exists(cells[j].row) && config.columns_by_id[config.sheets[i].id][cells[j].column].lookup_type) {
+				rowUpdateData[cells[j].column] = [];
+			} else if (table.exists(cells[j].row)) {
+				rowUpdateData[cells[j].column] = "";
+			}			    	        			
+
+		}
+
+		if (Object.keys(rowUpdateData).length > 0) {
+			table.updateItem(row, rowUpdateData);
+		}
+	}
 }
 
 function configureSheet(i){
@@ -196,14 +243,27 @@ function configureSheet(i){
 
 	});
 
-	$$("sheet_" + i).attachEvent("onItemDblClick", function(id, e, node){
+	webix.UIManager.addHotKey("any", function(view, ev){
 
+            //filter or text editor
+            if ((ev.target||ev.srcElement).tagName == "INPUT") return;
+
+	    doEdit( $$("sheet_" + i), ev);
+
+        },  $$("sheet_" + i));
+
+	$$("sheet_" + i).attachEvent("onItemDblClick", function(id, e, node){
 		doEdit(this, e);
 	});
 
 	webix.dp($$("sheet_" + i)).attachEvent('onAfterSaveError', function(id, status, obj, obj2){
 		if (obj2.text.indexOf("VersionConflictEngineException") > -1) 
 			webix.alert("You are editing an old version of this record.  Please refresh and try again.");
+		
+	});
+
+	$$("sheet_" + i).attachEvent('onStoreLoad', function(data, data2){
+		console.log(data,data2);
 		
 	});
 
@@ -248,14 +308,17 @@ function doEdit(view, ev){
 
 		doGraph(config.index_id, config_column, function (value){
 
-			var edges = new graph.LookupColumnValue(view.getSelectedItem()[column_id])
+			var edges = new graph.LookupColumnValue(view.getSelectedItem()[column_id]);
 
-			if (config_column.lookup_multi)
+			if (config_column.lookup_multi){
 				edges.put(value);
-			else
+			}else{
 				edges.putOnly(value);
+			}
 
-			view.updateItem(cell[0], makeUpdateData(column_id, edges.toArray()));
+			var updateData = makeUpdateData(column_id, edges.toArray());
+			console.log(view);
+			view.updateItem(cell[0].row, updateData);
 
 		});       
 

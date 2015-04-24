@@ -1,6 +1,6 @@
 
 /**
- * Module dependencies.
+ * ElasticSheets
  */
 
 var express = require('express');
@@ -14,7 +14,6 @@ var app = express();
 
 var initializer = require('./services/initializer');
 
-//	all environments
 app.set('port', process.env.PORT || 3000);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -31,12 +30,13 @@ if ('development' == app.get('env')) {
 
 app.get('/', routes.index);
 
+app.get('/search/:index_id/:type_id', rest.search);
+app.get('/options/:index_id/:type_id', rest.options);
+app.get('/view/:view/:index_id/:type_id', rest.view);
+
 app.post('/index/:index_id/:type_id/', rest.index);
 app.put('/index/:index_id/:type_id/:id', rest.index);
 app.del('/index/:index_id/:type_id/:id', rest.del);
-
-app.get('/search/:index_id/:type_id', rest.search);
-app.get('/options/:index_id/:type_id', rest.options);
 
 
 Q(initializer.init()).then(function (data) {

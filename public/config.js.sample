@@ -5,8 +5,9 @@ var ws_types = ["HTTP(S)","DNS","Database VIP","FTP","SMTP"];
 var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"];
 
 /*
- *  Once a column has been defined, it cannot be removed or have it's type changed unless you intend to "clean"
+ *  If you change a column's type, you must "reindex"
  */
+
 
 (function(exports){
 
@@ -39,9 +40,9 @@ var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"]
 	                	   contextmenu: ['SSH', 'RDP'],
 	                  	   contextmenuclicked: function(id, obj){
 	                  		   if (id === 'SSH'){
-	                  			   window.location.assign("ssh://" + obj.hostname); 
+	                  			   window.location.assign("ssh://" + obj.NETWORK_ADDRESS); 
 	                  		   }  else if (id === 'RDP'){
-	                  			   window.location.assign("rdp://" + obj.hostname);
+	                  			   window.location.assign("rdp://" + obj.NETWORK_ADDRESS);
 	                  			   
 	                  		   }
 	                  	   }
@@ -66,6 +67,7 @@ var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"]
 	                	            textColumn("desc", "Description"),
 	                	            textColumn("notes", "Notes")
 	                	            ]
+
 
 	                  },
 	                  { 
@@ -92,6 +94,7 @@ var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"]
 	                  },
 
 	                  ];
+
 
 
 	/*
@@ -124,7 +127,7 @@ var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"]
 				}
 		}
 
-		var options = {id: id, header: [label, {content:"serverFilter"}] , editor:"text", mapping: mapping, width:150, sort:"server"};
+		var options = {id: id, label:label, header: [label, {content:"serverFilter"}] , editor:"text", mapping: mapping, width:150, sort:"server"};
 		for (var key in overrides) {
 			options[key] = overrides[key];
 		}
@@ -143,7 +146,15 @@ var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"]
 				}
 		}
 
-		var options = {id: id, header: [label, {content:"serverFilter"}] , editor:"richselect", mapping: mapping, width:150, sort:"server"};
+		var options = {id: id,  label:label, editor:"richselect", mapping: mapping, width:150, sort:"server"};
+
+		if (overrides.drop_down == true){
+			options.header = [label, {content:"serverSelectFilter"}];
+			options.options = overrides.options;
+		} else {
+			overrides.drop_down = false;
+			options.header = [label, {content:"serverFilter"}];
+		}
 		for (var key in overrides) {
 			options[key] = overrides[key];
 		}
@@ -169,13 +180,13 @@ var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"]
 				}
 		}
 
-		var options = {id: id, lookup:true, lookup_type:type, width:200, mapping: mapping, parseJSONStringValue:true, sort:"server"};
+		var options = {id: id,  label:label, lookup:true, lookup_type:type, width:200, mapping: mapping, parseJSONStringValue:true, sort:"server"};
 
-		if (overrides && overrides.drop_down == true){
+		if (overrides.drop_down == true){
 			options.header = [label, {content:"serverSelectFilter"}];
 			options.options = "/options/" + exports.index_id + "/" + options.lookup_type;
 		} else {
-			options.drop_down = false;
+			overrides.drop_down = false;
 			options.header = [label, {content:"serverFilter"}];
 		}
 
@@ -209,6 +220,13 @@ var rs_types = ["Linux","Firewall","Load Balancer","Database","Switch","Router"]
 
 	}
 
+	function notEmpty(value){
+	  return value && value !== "";
+	}
+
+	function notEmptyArray(value){
+	  return (Array.isArray(value) && value.length > 0);
+	}
 	exports.columns_by_id = {};
 	exports.sheets_by_id = {};
 

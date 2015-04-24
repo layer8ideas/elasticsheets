@@ -13,22 +13,47 @@ var client = new elasticsearch.Client({
 
 var mappings = {};
 
+var default_dynamic_templates = [ {
+	  "string_fields" : {
+	    "match" : "*",
+	    "match_mapping_type" : "string",
+	    "mapping" : {
+	      "type" : "string", "index" : "analyzed", "omit_norms" : true,
+	      "fields" : {
+		"raw" : {"type": "string", "index" : "not_analyzed"}
+	      }
+	    }
+	  }
+	} ];
+
+
 for (i=0;i<config.sheets.length;i++){
 
-	var id = config.sheets[i].id;
+	var sheet = config.sheets[i];
 
-	mappings[id] = {};
-	mappings[id].properties = {};
+	mappings[sheet.id] = {};
+	mappings[sheet.id].dynamic_templates = default_dynamic_templates;
+	mappings[sheet.id].properties = {};
 
-	for (j=0;j<config.sheets[i].columns.length;j++){
-		var column = config.sheets[i].columns[j];
-		mappings[id].properties[column.id] = column.mapping;
+	for (j=0;j<sheet.columns.length;j++){
+		var column = sheet.columns[j];
+		// setting a mapping to null manually prevents it from being created
+		if (column.mapping) mappings[sheet.id].properties[column.id] = column.mapping;
 	}
 
+	// This INIT should (somehow) probably be moved to the child module
+	if (sheet.child_types) {
+	  for (c=0;c<sheet.child_types.length;c++){
+		var child = sheet.child_types[c];
+		mappings[child.id] = ( child.mapping ? cloneJSON(child.mapping) : { "dynamic_templates" : default_dynamic_templates } );
+		mappings[child.id]["_parent"] = { "type" : sheet.id };
+		
+	  }
+
+	}
+
+	
 }
-
-
-
 
 var index_settings = {
 
@@ -72,6 +97,12 @@ function init() {
 			var remappings = [];
 			for (var s=0;s<config.sheets.length;s++){
 				remappings.push(putMappingForType(config.sheets[s].id));
+				if (config.sheets[s].child_types) {
+				 for (c=0;c<config.sheets[s].child_types.length;c++){
+					var child = config.sheets[s].child_types[c];
+				   	remappings.push(putMappingForType(child.id));	
+				 }
+				}
 			}
 
 			console.log("Index Exists - RaMapping...! [" + remappings.length + "]");
@@ -98,7 +129,7 @@ function createIndex() {
 
 	var deferred = Q.defer();
 
-	console.log("Index Does Not Exist.  Creating...");
+	console.log("Index Does Not Exist.  Creating...",JSON.stringify(index_settings));
 
 	client.indices.create({index: config.index_id, body: index_settings}).then(function (exists) {
 		deferred.resolve();
@@ -118,6 +149,7 @@ function putMappingForType(type) {
 
 	client.indices.putMapping({index: config.index_id, type: type, body: mappings[type]}).then(function (data) {
 
+		console.log("..." + type);
 		deferred.resolve();
 
 	}, function (error) {
@@ -132,7 +164,7 @@ function putMappingForType(type) {
 
 function search(index_id, type_id, request_query) {
 
-	console.log("Request handler 'search' was called.");
+	console.log("Request handler 'search' was called.", index_id, type_id, request_query);
 
 	var deferred = Q.defer();
 	var search = {}
@@ -158,9 +190,8 @@ function search(index_id, type_id, request_query) {
 	}
 
 	if (!search.sort.hasOwnProperty("label.raw")){
-         search.sort["label.raw"] = { "order": "asc" };
-        }
-
+	 search.sort["label.raw"] = { "order": "asc" };
+	}
 
 	if (request_query.filter) {
 
@@ -304,15 +335,17 @@ function index(index_id, type_id, id, document) {
 		if (data.created) {
 			
 			response = {
-					status: "success",
-					newid: data._id,
-					id: document.sid
+				status: "success",
+				newid: data._id,
+				id: document.sid
 			};
+			console.log("Created", response);
 
 		} else {
 			
 			response = document;
 			response.version = data._version;
+			console.log("Update", response);
 
 		}
 
@@ -416,6 +449,9 @@ function options(index_id, type_id, request_query) {
 	return  deferred.promise;
 }
 
+function cloneJSON(obj){
+  return JSON.parse(JSON.stringify(obj)); 
+}
 
 function generateUUID(){
 	var d = new Date().getTime();

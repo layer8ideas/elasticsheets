@@ -1,0 +1,237 @@
+#!/bin/bash
+#chkconfig: 2345 80 05
+#description: ElasticSheets Server
+#
+BASE=/usr/local/elasticsheets
+PID=$BASE/elasticsheets.pid
+LOG=$BASE/log/elasticsheets.log
+ERROR=$BASE/log/elasticsheets-error.log
+BACKUPS=$BASE/backups
+NODE=$BASE/node/bin/node
+SERVER=$BASE/src/app.js
+INIT=$BASE/src/init.js
+ES=http://localhost:9200
+ES_INDEX=elasticsheets
+USR=elasticsheets
+
+NOW=$(date +"%Y-%m-%d-%H-%M-%S")
+
+status() {
+    echo
+    echo "==== Status"
+
+    if is_running
+    then
+        echo
+        echo "Running with PID file: $( cat $PID ) [$PID]"
+        echo
+        ps -ef | grep -v grep | grep $( cat $PID )
+    else
+        echo
+        echo "ElasticSheets Server is NOT Running"
+    fi
+    echo
+}
+
+start() {
+    if is_running
+    then
+        echo
+        echo "Already started. PID: [$( cat $PID )]"
+    else
+	echo
+        echo "==== Start"
+        touch $PID
+        if nohup "${NODE}" ${SERVER} >>$LOG 2>&1 &
+        then echo $! >$PID
+             echo "Server Started, PID=$!"
+             echo "$NOW: START" >>$LOG
+        else echo "Error... "
+	     tail $LOG
+             /bin/rm $PID
+        fi
+    fi
+}
+
+is_running() {
+	if [ -f $PID ]
+	then
+		if ps -p $( cat $PID ) > /dev/null
+		then
+			return 0; #true
+		else
+			return 1; #false
+		fi
+	else
+		return 1;
+	fi
+}
+
+kill_cmd() {
+   kill $( cat $PID )
+   sleep 2
+   if is_running
+   then
+	echo "Process is still living after -kill-.  Sending -9..."
+	kill -9 $( cat $PID )
+   fi
+}
+
+stop() {
+    echo
+    echo "==== Stop"
+
+    if is_running
+    then
+        kill_cmd
+        echo "$NOW: STOP" >>$LOG
+        /bin/rm $PID
+    else
+        echo "Server is already stopped...";
+    fi
+}
+
+dump() {
+	echo "Creating Backup... ($ES/$ES_INDEX -> $BACKUPS/data-$NOW)"
+	
+	$BASE/src/node_modules/elasticdump/bin/elasticdump \
+		 --input=$ES/$ES_INDEX \
+		 --output=$BACKUPS/mapping-$NOW \
+		--type=mapping
+	$BASE/src/node_modules/elasticdump/bin/elasticdump \
+		 --input=$ES/$ES_INDEX \
+		 --output=$BACKUPS/data-$NOW \
+		--type=data
+}
+
+dump_was_successful() {
+
+	if [ -s $BACKUPS/data-$NOW ]
+	then
+		echo "Backup Confirmed."
+		return 0; #true
+	else
+		echo "Backup Does Not Exist."
+		return 1; #false
+	fi
+
+}
+
+reindex() {
+	
+	dump
+	if dump_was_successful
+	then
+		stop
+		delete_index
+		echo; "${NODE}" ${INIT} 
+		restore_uncompressed_dump $NOW
+		compress_dump $NOW
+		start
+	else 
+		echo "Aborting.  No Backup could be found!"
+	fi
+
+}
+
+clean() {
+
+	stop
+	delete_index
+
+}
+
+#restore_mapping() {
+#	echo "Restoring Mapping... ($BACKUPS/mapping-$1 -> $ES/$ES_INDEX)"
+#	$BASE/src/node_modules/elasticdump/bin/elasticdump  \
+#		--type=mapping \
+#		--input=$BACKUPS/mapping-$1 \
+#		--output=$ES/$ES_INDEX
+#}
+
+restore_uncompressed_dump() {
+	echo "Restoring Data... ($BACKUPS/data-$1 -> $ES/$ES_INDEX)"
+	$BASE/src/node_modules/elasticdump/bin/elasticdump  \
+		--bulk=true \
+		--input=$BACKUPS/data-$1 \
+		--output=$ES/$ES_INDEX
+}
+
+restore() {
+	
+	verify_and_uncompress_backup $1
+	restore_uncompressed_dump $1
+	compress_dump $1
+
+}
+
+backup() {
+	dump
+	if dump_was_successful
+	then
+		cp $BASE/src/public/config.js $BACKUPS/config-$NOW.js
+		compress_dump $NOW
+	fi
+	
+}
+
+delete_index() {
+	echo "Deleting Index..."
+	curl -s -XDELETE $ES/$ES_INDEX
+}
+
+compress_dump() {
+	echo "Compressing Backup..."
+	gzip $BACKUPS/data-$1
+}
+
+verify_and_uncompress_backup() {
+	if [ -e $BACKUPS/data-$1.gz ]
+	then
+		echo "Uncompressing Backup..."
+		gunzip $BACKUPS/data-$1
+	elif [ -e $BACKUPS/data-$1 ]
+	then
+		echo "Backup is already Uncompressed"
+	else 
+		echo "Abort - Backup called '$BACKUPS/data-$1' could not be found!"
+		exit
+	fi
+	
+}
+
+case "$1" in
+    'start')
+            start
+            ;;
+    'stop')
+            stop
+            ;;
+    'restart')
+            stop ; echo "Sleeping..."; sleep 1 ;
+            start
+            ;;
+    'status')
+            status
+            ;;
+    'backup')
+            backup
+            ;;
+    'restore')
+            restore $2
+            ;;
+    'clean')
+            clean
+            ;;
+    'reindex')
+            reindex
+            ;;
+    *)
+            echo
+            echo "Usage: $0 { start | stop | restart | status | backup | reindex | clean }"
+            echo
+            exit 1
+            ;;
+esac
+
+exit 0

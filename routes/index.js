@@ -4,5 +4,5 @@
  */
 
 exports.index = function(req, res){
-  res.render('index', { title: 'ElasticSheets' });
+  res.render('index', { title: 'Autodata CMDB' });
 };

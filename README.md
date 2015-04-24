@@ -5,9 +5,6 @@ Organize lots of stuff.
 ElasticSearch
 https://www.elastic.co/
 
-Webix
-http://webix.com/
-
 
 ## Configuration
 
@@ -37,15 +34,10 @@ exports.sheets = [ {
 ## Installation
 1.  Install & Start ElasticSearch (Apache 2.0)
 https://www.elastic.co/downloads/elasticsearch
-2. Download NodeJS
-https://nodejs.org/download/
-3. Download Webix (GPLv3)
-http://webix.com/download-webix-gpl/
-4.  Place webix folder under /public
-5.  Configure public/config.js (copy config.js.sample)
-6.  Bootstrap NodeJS/Express
-# npm install
-7.  Run
-# node app.js
-8. Browse
+2. Download & Start ElasticSheets 0.2
+http://www.elasticsheets.org/download/elasticsheets-0.2.tar.gz
+3. Create a config.js or copy the sample under src/pubic/
+4.  Run
+# src/elasticsheets start
+5. Browse
 http://your-server.com:3000/

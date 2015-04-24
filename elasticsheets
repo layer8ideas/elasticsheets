@@ -2,7 +2,23 @@
 #chkconfig: 2345 80 05
 #description: ElasticSheets Server
 #
-BASE=/usr/local/elasticsheets
+
+SCRIPT=$0
+
+# SCRIPT may be an arbitrarily deep series of symlinks. Loop until we have the concrete path.
+while [ -h "$SCRIPT" ] ; do
+  ls=$(ls -ld "$SCRIPT")
+  # Drop everything prior to ->
+  link=$(expr "$ls" : '.*-> \(.*\)$')
+  if expr "$link" : '/.*' > /dev/null; then
+    SCRIPT="$link"
+  else
+    SCRIPT=$(dirname "$SCRIPT")/"$link"
+  fi
+done
+
+BASE=$(dirname "${SCRIPT}")/..
+
 PID=$BASE/elasticsheets.pid
 LOG=$BASE/log/elasticsheets.log
 ERROR=$BASE/log/elasticsheets-error.log
@@ -41,11 +57,29 @@ start() {
     else
 	echo
         echo "==== Start"
+        if [ ! -e $BASE/src/public/config.js ]
+        then
+          echo "Config file public/config.js doesn't exist.  Please create it or copy the sample!"
+          exit
+        fi
+        id -u $USR &>/dev/null || useradd $USR
+        if [ ! -d $BASE/log/ ]
+        then
+                mkdir $BASE/log/
+                chown $USR.$USR $BASE/log/
+        fi
         touch $PID
         if nohup "${NODE}" ${SERVER} >>$LOG 2>&1 &
         then echo $! >$PID
-             echo "Server Started, PID=$!"
-             echo "$NOW: START" >>$LOG
+             sleep 2
+             if is_running
+             then
+                echo "Server Started, PID=$!"
+                echo "$NOW: START" >>$LOG
+             else echo "Error... "
+                tail -10 $LOG
+                /bin/rm $PID
+             fi
         else echo "Error... "
 	     tail $LOG
              /bin/rm $PID

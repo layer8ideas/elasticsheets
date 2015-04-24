@@ -1,9 +1,6 @@
 # ElasticSheets v0.2
 Organize lots of stuff.
 
-Check out the Demo @ http://www.elasticsheets.org
-
-
 ## Requirements
 ElasticSearch
 https://www.elastic.co/

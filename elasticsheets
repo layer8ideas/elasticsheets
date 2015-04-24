@@ -127,7 +127,7 @@ stop() {
 
 dump() {
 	echo "Creating Backup... ($ES/$ES_INDEX -> $BACKUPS/data-$NOW)"
-	
+	[ -d $BACKUPS ] || mkdir $BACKUPS
 	$BASE/src/node_modules/elasticdump/bin/elasticdump \
 		 --input=$ES/$ES_INDEX \
 		 --output=$BACKUPS/mapping-$NOW \

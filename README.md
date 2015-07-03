@@ -1,6 +1,6 @@
 # ElasticSheets v0.2
 
-ElasticSheets is a Web Front end for ElasticSearch that allows users to search, add, remove, and modify documents in the form of table rows and columns.    This is useful when data can be searched and/or managed by many people simultaneously and automatically integrated with other applications via HTTP/JSON.
+ElasticSheets is a Web Front end for ElasticSearch that allows users to search, add, remove, and modify documents in the form of table rows and columns.    This is useful when data must be searched and managed by many people simultaneously and automatically integrated with other applications via HTTP/JSON.
 
 ElasticSheets is used in this Project:
 http://www.layer8ideas.com/large-scale-monitoring-using-cmdb/

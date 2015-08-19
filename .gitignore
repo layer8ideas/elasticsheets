@@ -11,6 +11,12 @@ node_modules
 .tern-project
 
 
+#############
+## IntelliJ
+#############
+.iml
+.idea/
+
 #################
 ## Eclipse
 #################
